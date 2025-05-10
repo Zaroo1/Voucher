@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Will You Be With Me, Naima?</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="message">
+      <h1>Naima, Will You Be With Me?</h1>
+      <p class="intro">Naima, I’ve been thinking about you every single day, and I feel so lucky to have you in my life.</p>
+      <p class="intro">From the first moment we met, I knew my world was about to change.</p>
+      <p class="question">I want us to grow together, learn from each other, and build something beautiful. Would you be willing to take this journey with me, and see where it leads us?</p>
+      <p class="note">I would be so happy if it could be between us, for now, as we grow together.</p>
+      <div class="buttons">
+        <button id="yesButton" onclick="showAnswer('yes')">Yes</button>
+        <button id="noButton" onclick="showAnswer('no')">No</button>
+      </div>
+    </div>
+    <div class="answer" id="answer"></div>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>
