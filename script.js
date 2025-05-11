@@ -69,6 +69,13 @@ payButton.addEventListener('click', async function() {
 
         // Calculate total
         const totalPrice = PRICES[type] * quantity * 100;
+        
+        
+        //added
+console.log("About to open Paystack payment");
+const handler = PaystackPop.setup({
+    ...
+});
 
         // Process Paystack payment
         const handler = PaystackPop.setup({
