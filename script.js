@@ -267,3 +267,35 @@ document.getElementById('clear-sold').addEventListener('click', function() {
     updateInventoryDisplay();
   }
 });
+
+//API 
+
+// PUT YOUR OWN API URL AND KEY HERE
+const SHEETDB_URL = "https://sheetdb.io/api/v1/YOUR_SHEET_ID";
+const SHEETDB_KEY = "YOUR_API_KEY";
+
+// This gets all available WASSCE vouchers
+async function getWASSCEVouchers() {
+  try {
+    const response = await axios.get(`${SHEETDB_URL}?filter[Type]=WASSCE&filter[Status]=Available`);
+    return response.data;
+  } catch (error) {
+    console.error("Oops! Error:", error);
+    return [];
+  }
+}
+
+// This marks a voucher as sold
+async function sellVoucher(serial) {
+  try {
+    await axios.patch(`${SHEETDB_URL}/Serial/${serial}`, {
+      data: { Status: "Sold" }
+    }, {
+      headers: { Authorization: `Bearer ${SHEETDB_KEY}` }
+    });
+    return true;
+  } catch (error) {
+    console.error("Oops! Error:", error);
+    return false;
+  }
+}
