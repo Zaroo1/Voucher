@@ -2,7 +2,7 @@
 const ADMIN_PASSWORD = "@Zaroo_zaroo.me/4545";
 const PAYSTACK_KEY = "pk_live_8c56d91cee6884d988dd8355981e0134ab72b94b";
 const SHEETDB_URL = "https://sheetdb.io/api/v1/bb2fc4ca1q4jg";
-const SHEETDB_KEY = "YOUR_API_KEY"; // Keep this secure!
+const SHEETDB_KEY = "bb2fc4ca1q4jg"; // Keep this secure!
 
 // DOM Elements (same as before)
 const voucherTypeSelect = document.getElementById('voucher-type');
