@@ -49,6 +49,7 @@ voucherTypeSelect.addEventListener('change', updatePrices);
 quantityInput.addEventListener('input', updatePrices);
 
 // Payment processing
+// Payment processing
 payButton.addEventListener('click', async function() {
     const type = voucherTypeSelect.value;
     const quantity = parseInt(quantityInput.value) || 1;
@@ -60,6 +61,44 @@ payButton.addEventListener('click', async function() {
     }
 
     try {
+        const available = await getAvailableVouchers(type);
+        if (available.length < quantity) {
+            alert(`Only ${available.length} ${type.toUpperCase()} vouchers available!`);
+            return;
+        }
+
+        const totalPrice = PRICES[type] * quantity * 100;
+
+        const paymentRef = 'AZZ-' + Date.now();
+
+        const handler = PaystackPop.setup({
+            key: PAYSTACK_KEY,
+            email: customerEmail,
+            amount: totalPrice,
+            currency: 'GHS',
+            ref: paymentRef,
+            callback: async function(response) {
+                if (response.status === "success") {
+                    const soldVouchers = available.slice(0, quantity);
+                    for (const voucher of soldVouchers) {
+                        await markVoucherAsSold(voucher.Serial, type, response.reference);
+                    }
+                    displayPurchasedVouchers(soldVouchers, type);
+                } else {
+                    alert("Payment was not successful. Please try again.");
+                }
+            },
+            onClose: function() {
+                alert("Payment window closed.");
+            }
+        });
+
+        handler.openIframe();
+    } catch (error) {
+        console.error("Payment error:", error);
+        alert("Something went wrong with the payment. Please try again later.");
+    }
+});
         // Check available vouchers
         const available = await getAvailableVouchers(type);
         if (available.length < quantity) {
