@@ -1,19 +1,9 @@
-// Initialize voucher inventory in localStorage if it doesn't exist
-if (!localStorage.getItem('voucherInventory')) {
-    localStorage.setItem('voucherInventory', JSON.stringify({
-        wassce: [],
-        novdec: [],
-        bece: []
-    }));
-}
 
-// Initialize sold vouchers in localStorage if it doesn't exist
-if (!localStorage.getItem('soldVouchers')) {
-    localStorage.setItem('soldVouchers', JSON.stringify([]));
-}
-
-// Initialize admin password (in a real app, this would be server-side)
-const ADMIN_PASSWORD = "@Zaroo_zaroo.me/4545"; // Change this to your preferred password
+// Configuration - REPLACE THESE WITH YOUR OWN VALUES
+const ADMIN_PASSWORD = "@Zaroo_zaroo.me/4545";
+const PAYSTACK_KEY = "pk_live_8c56d91cee6884d988dd8355981e0134ab72b94b";
+const SHEETDB_URL = "https://docs.google.com/spreadsheets/d/1Q3yxeu-OnPERKp4VIpxBM2RUL-urzaBiHhyPAlQiGiY/edit#gid=0";
+const SHEETDB_KEY = "https://sheetdb.io/api/v1/bb2fc4ca1q4jg";
 
 // DOM Elements
 const voucherTypeSelect = document.getElementById('voucher-type');
@@ -33,95 +23,119 @@ const voucherTypeAdminSelect = document.getElementById('voucher-type-admin');
 const voucherBatchTextarea = document.getElementById('voucher-batch');
 const uploadVouchersButton = document.getElementById('upload-vouchers');
 const inventoryDisplayDiv = document.getElementById('inventory-display');
+const clearSoldButton = document.getElementById('clear-sold');
 
-// Prices for each voucher type (you can change these)
+// Prices for each voucher type
 const PRICES = {
     wassce: 1.00,
     novdec: 1.00,
     bece: 1.00
 };
 
-// Update prices when voucher type changes
-voucherTypeSelect.addEventListener('change', updatePrices);
-quantityInput.addEventListener('input', updatePrices);
+// Initialize the page
+document.addEventListener('DOMContentLoaded', function() {
+    updatePrices();
+    updateInventoryDisplay();
+});
 
+// Price calculation functions
 function updatePrices() {
     const type = voucherTypeSelect.value;
     const quantity = parseInt(quantityInput.value) || 1;
-    
     unitPriceSpan.textContent = `GHS ${PRICES[type].toFixed(2)}`;
     totalPriceSpan.textContent = `GHS ${(PRICES[type] * quantity).toFixed(2)}`;
 }
 
-// Initialize prices
-updatePrices();
+voucherTypeSelect.addEventListener('change', updatePrices);
+quantityInput.addEventListener('input', updatePrices);
 
-// Paystack payment handler
-payButton.addEventListener('click', initiatePayment);
-
-function initiatePayment() {
+// Payment processing
+payButton.addEventListener('click', async function() {
     const type = voucherTypeSelect.value;
     const quantity = parseInt(quantityInput.value) || 1;
-    const totalPrice = PRICES[type] * quantity * 100; // Paystack uses kobo (multiply by 100)
+    const customerEmail = prompt("Please enter your email for payment receipt:");
     
-    // Check if we have enough vouchers in stock
-    const inventory = JSON.parse(localStorage.getItem('voucherInventory'));
-    if (inventory[type].length < quantity) {
-        alert(`Sorry, we only have ${inventory[type].length} ${type.toUpperCase()} vouchers available.`);
+    if (!customerEmail) {
+        alert("Email is required for payment");
         return;
     }
-    
-    const handler = PaystackPop.setup({
-        key: 'pk_live_8c56d91cee6884d988dd8355981e0134ab72b94b',
-        email: 'aazzinternethub@gmail.com',
-        amount: totalPrice,
-        currency: 'GHS',
-        ref: 'AZZ' + Math.floor(Math.random() * 1000000000 + 1),
-        onClose: function() {
-            alert('Payment window closed.');
-        },
-        callback: function(response) {
-            // Payment was successful
-            processVoucherPurchase(type, quantity, response.reference);
+
+    try {
+        // Check available vouchers
+        const available = await getAvailableVouchers(type);
+        if (available.length < quantity) {
+            alert(`Only ${available.length} ${type.toUpperCase()} vouchers available!`);
+            return;
         }
-    });
-    
-    handler.openIframe();
+
+        // Calculate total
+        const totalPrice = PRICES[type] * quantity * 100;
+
+        // Process Paystack payment
+        const handler = PaystackPop.setup({
+            key: PAYSTACK_KEY,
+            email: customerEmail,
+            amount: totalPrice,
+            currency: 'GHS',
+            ref: 'AZZ-' + Date.now(),
+            callback: async function(response) {
+                // Mark vouchers as sold
+                const soldVouchers = available.slice(0, quantity);
+                for (const voucher of soldVouchers) {
+                    await markVoucherAsSold(voucher.Serial, type, response.reference);
+                }
+                
+                // Display purchased vouchers
+                displayPurchasedVouchers(soldVouchers, type);
+            },
+            onClose: function() {
+                alert("Payment cancelled");
+            }
+        });
+        handler.openIframe();
+    } catch (error) {
+        console.error("Payment error:", error);
+        alert("Error processing payment. Please try again.");
+    }
+});
+
+// Voucher management functions
+async function getAvailableVouchers(type) {
+    try {
+        const response = await axios.get(
+            `${SHEETDB_URL}?filter[Type]=${type.toUpperCase()}&filter[Status]=Available`,
+            { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
+        );
+        return response.data || [];
+    } catch (error) {
+        console.error("Error fetching vouchers:", error);
+        return [];
+    }
 }
 
-function processVoucherPurchase(type, quantity, paymentRef) {
-    const inventory = JSON.parse(localStorage.getItem('voucherInventory'));
-    const soldVouchers = JSON.parse(localStorage.getItem('soldVouchers'));
-    
-    // Get the requested number of vouchers
-    const purchasedVouchers = inventory[type].splice(0, quantity);
-    
-    // Mark vouchers as sold with payment reference
-    const timestamp = new Date().toISOString();
-    purchasedVouchers.forEach(voucher => {
-        soldVouchers.push({
-            ...voucher,
-            paymentRef,
-            dateSold: timestamp,
-            type
-        });
-    });
-    
-    // Update localStorage
-    localStorage.setItem('voucherInventory', JSON.stringify(inventory));
-    localStorage.setItem('soldVouchers', JSON.stringify(soldVouchers));
-    
-    // Display the vouchers to the user
-    displayPurchasedVouchers(purchasedVouchers, type);
-    
-    // Update admin view
-    updateInventoryDisplay();
+async function markVoucherAsSold(serial, type, paymentRef) {
+    try {
+        await axios.patch(
+            `${SHEETDB_URL}/Serial/${serial}`,
+            {
+                data: {
+                    Status: "Sold",
+                    PaymentRef: paymentRef,
+                    DateSold: new Date().toISOString()
+                }
+            },
+            { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
+        );
+        return true;
+    } catch (error) {
+        console.error("Error updating voucher:", error);
+        return false;
+    }
 }
 
 function displayPurchasedVouchers(vouchers, type) {
     voucherSelectionSection.style.display = 'none';
     voucherDisplaySection.style.display = 'block';
-    
     voucherListDiv.innerHTML = '';
     
     vouchers.forEach(voucher => {
@@ -130,31 +144,21 @@ function displayPurchasedVouchers(vouchers, type) {
         
         let displayText = '';
         if (type === 'wassce' || type === 'novdec') {
-            displayText = `Your WEAC checkers are (SN: ${voucher.serial} , PIN: ${voucher.pin}) Please visit ghana.waecdirect.org to print your results.`;
-        } else if (type === 'bece') {
-            displayText = `Your BECE checkers are (SN: ${voucher.serial} , PIN: ${voucher.pin}) Please visit the appropriate portal to check your results.`;
+            displayText = `Your WEAC checkers are (SN: ${voucher.Serial} , PIN: ${voucher.PIN}) Please visit ghana.waecdirect.org`;
+        } else {
+            displayText = `Your BECE checkers are (SN: ${voucher.Serial} , PIN: ${voucher.PIN})`;
         }
         
-        voucherDiv.innerHTML = `<p>${displayText}</p>`;
+        voucherDiv.innerHTML = `<p>${displayText}</p><p>Price: GHS ${PRICES[type]}.00</p>`;
         voucherListDiv.appendChild(voucherDiv);
     });
 }
 
-// Print button handler
-printButton.addEventListener('click', () => {
-    window.print();
-});
-
-// New purchase button handler
-newPurchaseButton.addEventListener('click', () => {
-    voucherDisplaySection.style.display = 'none';
-    voucherSelectionSection.style.display = 'block';
-});
-
-// Admin login handler
-loginAdminButton.addEventListener('click', () => {
-    if (adminPasswordInput.value === ADMIN_PASSWORD) {
+// Admin functions
+loginAdminButton.addEventListener('click', function() {
+    if (adminPasswordInput.value.trim() === ADMIN_PASSWORD) {
         adminPanelDiv.style.display = 'block';
+        clearSoldButton.style.display = 'block';
         adminPasswordInput.value = '';
         updateInventoryDisplay();
     } else {
@@ -162,8 +166,7 @@ loginAdminButton.addEventListener('click', () => {
     }
 });
 
-// Upload vouchers handler
-uploadVouchersButton.addEventListener('click', () => {
+uploadVouchersButton.addEventListener('click', async function() {
     const type = voucherTypeAdminSelect.value;
     const batchText = voucherBatchTextarea.value.trim();
     
@@ -172,130 +175,128 @@ uploadVouchersButton.addEventListener('click', () => {
         return;
     }
     
-    const lines = batchText.split('\n');
-    const inventory = JSON.parse(localStorage.getItem('voucherInventory'));
-    
-    let addedCount = 0;
-    
-    lines.forEach(line => {
-        line = line.trim();
-        if (!line) return;
+    try {
+        const lines = batchText.split('\n');
+        const newVouchers = [];
         
-        // Extract serial and pin from the line
-        const serialMatch = line.match(/SN:\s*(\w+)/);
-        const pinMatch = line.match(/PIN:\s*(\d+)/);
-        
-        if (serialMatch && pinMatch) {
-            const serial = serialMatch[1];
-            const pin = pinMatch[1];
+        lines.forEach(line => {
+            line = line.trim();
+            if (!line) return;
             
-            // Check if this voucher already exists
-            const exists = inventory[type].some(v => v.serial === serial && v.pin === pin);
+            const serialMatch = line.match(/SN:\s*(\w+)/);
+            const pinMatch = line.match(/PIN:\s*(\d+)/);
             
-            if (!exists) {
-                inventory[type].push({ serial, pin });
-                addedCount++;
+            if (serialMatch && pinMatch) {
+                newVouchers.push({
+                    Type: type.toUpperCase(),
+                    Serial: serialMatch[1],
+                    PIN: pinMatch[1],
+                    Status: "Available",
+                    Price: PRICES[type],
+                    PaymentRef: "",
+                    DateSold: ""
+                });
             }
+        });
+        
+        if (newVouchers.length > 0) {
+            await axios.post(
+                SHEETDB_URL,
+                { data: newVouchers },
+                { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
+            );
+            alert(`Added ${newVouchers.length} new ${type.toUpperCase()} vouchers!`);
+            voucherBatchTextarea.value = '';
+            updateInventoryDisplay();
+        } else {
+            alert("No valid vouchers found in the text");
         }
-    });
-    
-    localStorage.setItem('voucherInventory', JSON.stringify(inventory));
-    voucherBatchTextarea.value = '';
-    updateInventoryDisplay();
-    
-    alert(`Added ${addedCount} new ${type.toUpperCase()} vouchers.`);
+    } catch (error) {
+        console.error("Upload error:", error);
+        alert("Error uploading vouchers. Please try again.");
+    }
 });
 
-function updateInventoryDisplay() {
-    const inventory = JSON.parse(localStorage.getItem('voucherInventory'));
-    const soldVouchers = JSON.parse(localStorage.getItem('soldVouchers'));
-    
-    inventoryDisplayDiv.innerHTML = '';
-    
-    for (const type in inventory) {
-        const typeDiv = document.createElement('div');
-        typeDiv.className = 'inventory-item';
+clearSoldButton.addEventListener('click', async function() {
+    if (confirm('⚠️ WARNING! This will clear ALL sold voucher records.\n\nAre you sure?')) {
+        try {
+            // Get all sold vouchers
+            const response = await axios.get(
+                `${SHEETDB_URL}?filter[Status]=Sold`,
+                { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
+            );
+            
+            // Update them to "Expired" status (SheetDB doesn't support bulk delete)
+            for (const voucher of response.data) {
+                await axios.patch(
+                    `${SHEETDB_URL}/Serial/${voucher.Serial}`,
+                    { data: { Status: "Expired" } },
+                    { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
+                );
+            }
+            
+            alert("Sold vouchers have been cleared!");
+            updateInventoryDisplay();
+        } catch (error) {
+            console.error("Error clearing vouchers:", error);
+            alert("Error clearing vouchers. Please try again.");
+        }
+    }
+});
+
+async function updateInventoryDisplay() {
+    try {
+        const response = await axios.get(
+            SHEETDB_URL,
+            { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
+        );
         
-        const typeName = type.toUpperCase();
-        const count = inventory[type].length;
+        const allVouchers = response.data || [];
+        inventoryDisplayDiv.innerHTML = '';
         
-        // Count sold vouchers of this type
-        const soldCount = soldVouchers.filter(v => v.type === type).length;
+        // Count by type
+        const counts = {
+            wassce: { available: 0, sold: 0 },
+            novdec: { available: 0, sold: 0 },
+            bece: { available: 0, sold: 0 }
+        };
         
-        typeDiv.innerHTML = `
-            <div>
-                <strong>${typeName}</strong>
-                <p>Available: ${count} | Sold: ${soldCount}</p>
-            </div>
-            <span class="inventory-count">${count}</span>
-        `;
+        allVouchers.forEach(voucher => {
+            const type = voucher.Type.toLowerCase();
+            if (counts[type]) {
+                if (voucher.Status === "Available") {
+                    counts[type].available++;
+                } else {
+                    counts[type].sold++;
+                }
+            }
+        });
         
-        inventoryDisplayDiv.appendChild(typeDiv);
+        // Display counts
+        for (const type in counts) {
+            const typeDiv = document.createElement('div');
+            typeDiv.className = 'inventory-item';
+            
+            typeDiv.innerHTML = `
+                <div>
+                    <strong>${type.toUpperCase()}</strong>
+                    <p>Available: ${counts[type].available} | Sold: ${counts[type].sold}</p>
+                </div>
+                <span class="inventory-count">${counts[type].available}</span>
+            `;
+            
+            inventoryDisplayDiv.appendChild(typeDiv);
+        }
+    } catch (error) {
+        console.error("Error fetching inventory:", error);
+        inventoryDisplayDiv.innerHTML = '<p>Error loading inventory. Please refresh.</p>';
     }
 }
 
-// Initialize the page
-updateInventoryDisplay();
-
-
-
-
-
-
-
-
-
-
-
-// rough rough tough
-// Admin login handler
-loginAdminButton.addEventListener('click', function() {
-  if (adminPasswordInput.value.trim() === ADMIN_PASSWORD) {
-    adminPanelDiv.style.display = 'block';
-    document.getElementById('clear-sold').style.display = 'block'; // Show button
-    updateInventoryDisplay();
-  } else {
-    alert('Incorrect password');
-  }
+// UI Functions
+printButton.addEventListener('click', () => window.print());
+newPurchaseButton.addEventListener('click', () => {
+    voucherDisplaySection.style.display = 'none';
+    voucherSelectionSection.style.display = 'block';
 });
 
-// Clear sold vouchers function
-document.getElementById('clear-sold').addEventListener('click', function() {
-  if (confirm('⚠️ DANGER! This will permanently delete ALL records of sold vouchers!\n\nAre you sure?')) {
-    localStorage.setItem('soldVouchers', JSON.stringify([]));
-    alert('All sold voucher records have been cleared!');
-    updateInventoryDisplay();
-  }
-});
-
-//API 
-
-// PUT YOUR OWN API URL AND KEY HERE
-const SHEETDB_URL = "https://sheetdb.io/api/v1/YOUR_SHEET_ID";
-const SHEETDB_KEY = "YOUR_API_KEY";
-
-// This gets all available WASSCE vouchers
-async function getWASSCEVouchers() {
-  try {
-    const response = await axios.get(`${SHEETDB_URL}?filter[Type]=WASSCE&filter[Status]=Available`);
-    return response.data;
-  } catch (error) {
-    console.error("Oops! Error:", error);
-    return [];
-  }
-}
-
-// This marks a voucher as sold
-async function sellVoucher(serial) {
-  try {
-    await axios.patch(`${SHEETDB_URL}/Serial/${serial}`, {
-      data: { Status: "Sold" }
-    }, {
-      headers: { Authorization: `Bearer ${SHEETDB_KEY}` }
-    });
-    return true;
-  } catch (error) {
-    console.error("Oops! Error:", error);
-    return false;
-  }
-}
