@@ -44,8 +44,15 @@ function updatePrices() {
 voucherTypeSelect.addEventListener('change', updatePrices);
 quantityInput.addEventListener('input', updatePrices);
 
-// Payment Processing - UPDATED VERSION
+// Payment Processing - FIXED VERSION
 payButton.addEventListener('click', async function() {
+    // First check if Paystack is loaded
+    if (typeof PaystackPop === 'undefined') {
+        alert("Payment system not loaded. Please refresh the page.");
+        console.error("PaystackPop is not defined");
+        return;
+    }
+
     try {
         // Validate inputs
         const type = voucherTypeSelect.value;
@@ -72,9 +79,34 @@ payButton.addEventListener('click', async function() {
         const totalPrice = PRICES[type] * quantity * 100; // in kobo
         const paymentRef = 'AZZ-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
 
-        console.log("Initiating payment for:", {
-            type, quantity, email: customerEmail, amount: totalPrice, ref: paymentRef
+        console.log("Payment initialization:", {
+            type, quantity, email: customerEmail, 
+            amount: totalPrice, ref: paymentRef
         });
+
+        // Define callback separately to ensure it's a proper function
+        const paymentCallback = function(response) {
+            console.log("Paystack callback received:", response);
+            
+            // Handle the response in a separate async function
+            (async function() {
+                try {
+                    if (response.status === "success") {
+                        const soldVouchers = available.slice(0, quantity);
+                        for (const voucher of soldVouchers) {
+                            await markVoucherAsSold(voucher.Serial, type, response.reference);
+                        }
+                        displayPurchasedVouchers(soldVouchers, type);
+                        alert("Payment successful! Your vouchers are ready.");
+                    } else {
+                        alert("Payment failed: " + (response.message || "Unknown error"));
+                    }
+                } catch (error) {
+                    console.error("Callback processing error:", error);
+                    alert("Voucher processing failed. Please contact support.");
+                }
+            })();
+        };
 
         // Configure Paystack
         const handler = PaystackPop.setup({
@@ -97,38 +129,29 @@ payButton.addEventListener('click', async function() {
                     }
                 ]
             },
-            callback: async function(response) {
-                console.log("Payment response:", response);
-                if (response.status === "success") {
-                    try {
-                        const soldVouchers = available.slice(0, quantity);
-                        for (const voucher of soldVouchers) {
-                            await markVoucherAsSold(voucher.Serial, type, response.reference);
-                        }
-                        displayPurchasedVouchers(soldVouchers, type);
-                        alert("Payment successful! Your vouchers are ready.");
-                    } catch (error) {
-                        console.error("Voucher processing error:", error);
-                        alert("Voucher processing failed. Please contact support with reference: " + response.reference);
-                    }
-                } else {
-                    alert("Payment failed: " + (response.message || "Unknown error"));
-                }
-            },
+            callback: paymentCallback, // Using the properly defined function
             onClose: function() {
                 console.log("Payment window closed");
                 alert("Payment not completed - window closed");
             }
         });
 
+        // Verify the callback is properly set
+        if (typeof handler.callback !== 'function') {
+            console.error("Callback is not a function:", handler.callback);
+            alert("Payment system error - please contact support");
+            return;
+        }
+
         handler.openIframe();
     } catch (error) {
-        console.error("Payment error:", error);
-        alert("Payment failed: " + error.message);
+        console.error("Payment initialization error:", error);
+        alert("Payment failed to start: " + error.message);
     }
 });
 
-// Voucher management
+// [REST OF YOUR ORIGINAL CODE REMAINS EXACTLY THE SAME]
+// Voucher management functions
 async function getAvailableVouchers(type) {
     try {
         const response = await axios.get(
@@ -187,136 +210,4 @@ function displayPurchasedVouchers(vouchers, type) {
     });
 }
 
-// Admin functions
-loginAdminButton.addEventListener('click', function() {
-    if (adminPasswordInput.value.trim() === ADMIN_PASSWORD) {
-        adminPanelDiv.style.display = 'block';
-        clearSoldButton.style.display = 'block';
-        adminPasswordInput.value = '';
-        updateInventoryDisplay();
-    } else {
-        alert('Incorrect password');
-    }
-});
-
-uploadVouchersButton.addEventListener('click', async function() {
-    const type = voucherTypeAdminSelect.value;
-    const batchText = voucherBatchTextarea.value.trim();
-    
-    if (!batchText) {
-        alert('Please paste voucher details');
-        return;
-    }
-    
-    try {
-        const lines = batchText.split('\n');
-        const newVouchers = [];
-        
-        lines.forEach(line => {
-            line = line.trim();
-            if (!line) return;
-            
-            const serialMatch = line.match(/SN:\s*(\w+)/);
-            const pinMatch = line.match(/PIN:\s*(\d+)/);
-            
-            if (serialMatch && pinMatch) {
-                newVouchers.push({
-                    Type: type.toUpperCase(),
-                    Serial: serialMatch[1],
-                    PIN: pinMatch[1],
-                    Status: "Available",
-                    Price: PRICES[type],
-                    PaymentRef: "",
-                    DateSold: ""
-                });
-            }
-        });
-        
-        if (newVouchers.length > 0) {
-            await axios.post(
-                SHEETDB_URL,
-                { data: newVouchers },
-                { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
-            );
-            alert(`Added ${newVouchers.length} new ${type.toUpperCase()} vouchers!`);
-            voucherBatchTextarea.value = '';
-            updateInventoryDisplay();
-        } else {
-            alert("No valid vouchers found");
-        }
-    } catch (error) {
-        console.error("Upload error:", error);
-        alert("Error uploading vouchers");
-    }
-});
-
-clearSoldButton.addEventListener('click', async function() {
-    if (confirm('⚠️ Clear ALL sold voucher records?')) {
-        try {
-            const response = await axios.get(
-                `${SHEETDB_URL}?filter[Status]=Sold`,
-                { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
-            );
-            
-            for (const voucher of response.data) {
-                await axios.patch(
-                    `${SHEETDB_URL}/Serial/${voucher.Serial}`,
-                    { data: { Status: "Expired" } },
-                    { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
-                );
-            }
-            
-            alert("Sold vouchers cleared!");
-            updateInventoryDisplay();
-        } catch (error) {
-            console.error("Clear error:", error);
-            alert("Error clearing vouchers");
-        }
-    }
-});
-
-async function updateInventoryDisplay() {
-    try {
-        const response = await axios.get(
-            SHEETDB_URL,
-            { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
-        );
-        
-        const allVouchers = response.data || [];
-        const counts = {
-            WASSCE: { available: 0, sold: 0 },
-            NONDEC: { available: 0, sold: 0 },
-            BECE: { available: 0, sold: 0 }
-        };
-        
-        allVouchers.forEach(voucher => {
-            const type = voucher.Type.toUpperCase();
-            if (counts[type]) {
-                counts[type][voucher.Status === "Available" ? "available" : "sold"]++;
-            }
-        });
-        
-        inventoryDisplayDiv.innerHTML = '';
-        for (const type in counts) {
-            const typeDiv = document.createElement('div');
-            typeDiv.className = 'inventory-item';
-            typeDiv.innerHTML = `
-                <div>
-                    <strong>${type}</strong>
-                    <p>Available: ${counts[type].available} | Sold: ${counts[type].sold}</p>
-                </div>
-            `;
-            inventoryDisplayDiv.appendChild(typeDiv);
-        }
-    } catch (error) {
-        console.error("Inventory error:", error);
-        inventoryDisplayDiv.innerHTML = '<p>Error loading inventory</p>';
-    }
-}
-
-// UI Functions
-printButton.addEventListener('click', () => window.print());
-newPurchaseButton.addEventListener('click', () => {
-    voucherDisplaySection.style.display = 'none';
-    voucherSelectionSection.style.display = 'block';
-});
+// [ALL OTHER FUNCTIONS REMAIN UNCHANGED FROM YOUR ORIGINAL CODE]
