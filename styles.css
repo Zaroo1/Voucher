@@ -1,6 +1,6 @@
 :root {
-    --primary-color: #003366; /* Deep blue */
-    --secondary-color: #ffffff; /* White */
+    --primary-color: #003366;
+    --secondary-color: #ffffff;
     --accent-color: #004080;
     --text-color: #333333;
     --light-gray: #f5f5f5;
@@ -90,7 +90,7 @@ textarea {
     cursor: pointer;
     font-size: 1rem;
     font-weight: 600;
-    transition: background-color 0.3s;
+    transition: all 0.3s;
     display: inline-block;
     margin-top: 10px;
 }
@@ -147,6 +147,31 @@ textarea {
     color: var(--primary-color);
 }
 
+/* Clear Sold Button Styles */
+.btn-clear-vouchers {
+    display: none;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    margin-top: 30px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+    text-align: center;
+}
+
+.btn-clear-vouchers:hover {
+    background-color: #c82333;
+    transform: scale(1.02);
+}
+
+.btn-clear-vouchers:active {
+    transform: scale(0.98);
+}
+
 footer {
     background-color: var(--primary-color);
     color: var(--secondary-color);
@@ -183,5 +208,3 @@ footer p {
         width: 95%;
     }
 }
-
-/* warning*/
