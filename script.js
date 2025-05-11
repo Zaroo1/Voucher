@@ -1,11 +1,10 @@
-
-// Configuration - REPLACE THESE WITH YOUR OWN VALUES
+// Configuration with YOUR credentials
 const ADMIN_PASSWORD = "@Zaroo_zaroo.me/4545";
 const PAYSTACK_KEY = "pk_live_8c56d91cee6884d988dd8355981e0134ab72b94b";
-const SHEETDB_URL = "https://docs.google.com/spreadsheets/d/1Q3yxeu-OnPERKp4VIpxBM2RUL-urzaBiHhyPAlQiGiY/edit#gid=0";
-const SHEETDB_KEY = "https://sheetdb.io/api/v1/bb2fc4ca1q4jg";
+const SHEETDB_URL = "https://sheetdb.io/api/v1/bb2fc4ca1q4jg";
+const SHEETDB_KEY = "YOUR_API_KEY"; // Keep this secure!
 
-// DOM Elements
+// DOM Elements (same as before)
 const voucherTypeSelect = document.getElementById('voucher-type');
 const quantityInput = document.getElementById('quantity');
 const unitPriceSpan = document.getElementById('unit-price');
@@ -226,7 +225,7 @@ clearSoldButton.addEventListener('click', async function() {
                 { headers: { Authorization: `Bearer ${SHEETDB_KEY}` } }
             );
             
-            // Update them to "Expired" status (SheetDB doesn't support bulk delete)
+            // Update them to "Expired" status
             for (const voucher of response.data) {
                 await axios.patch(
                     `${SHEETDB_URL}/Serial/${voucher.Serial}`,
@@ -256,13 +255,13 @@ async function updateInventoryDisplay() {
         
         // Count by type
         const counts = {
-            wassce: { available: 0, sold: 0 },
-            novdec: { available: 0, sold: 0 },
-            bece: { available: 0, sold: 0 }
+            WASSCE: { available: 0, sold: 0 },
+            NONDEC: { available: 0, sold: 0 },
+            BECE: { available: 0, sold: 0 }
         };
         
         allVouchers.forEach(voucher => {
-            const type = voucher.Type.toLowerCase();
+            const type = voucher.Type.toUpperCase();
             if (counts[type]) {
                 if (voucher.Status === "Available") {
                     counts[type].available++;
@@ -279,7 +278,7 @@ async function updateInventoryDisplay() {
             
             typeDiv.innerHTML = `
                 <div>
-                    <strong>${type.toUpperCase()}</strong>
+                    <strong>${type}</strong>
                     <p>Available: ${counts[type].available} | Sold: ${counts[type].sold}</p>
                 </div>
                 <span class="inventory-count">${counts[type].available}</span>
@@ -299,4 +298,3 @@ newPurchaseButton.addEventListener('click', () => {
     voucherDisplaySection.style.display = 'none';
     voucherSelectionSection.style.display = 'block';
 });
-
