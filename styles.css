@@ -1,60 +1,55 @@
 body {
-  margin: 0;
   font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(to bottom right, #0D1B2A, #1B263B);
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  background: #f7f9fc;
+  color: #333;
+  margin: 0;
+  padding: 0;
 }
 
 .container {
-  background: white;
-  color: #0D1B2A;
-  border-radius: 10px;
-  padding: 30px;
   max-width: 400px;
-  width: 90%;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-  text-align: center;
-}
-
-.logo {
-  width: 80px;
-  margin-bottom: 20px;
+  margin: 50px auto;
+  background: #ffffff;
+  padding: 30px;
+  box-shadow: 0 0 15px rgba(0, 0, 50, 0.1);
+  border-radius: 10px;
+  border-left: 8px solid #004aad;
 }
 
 h1 {
-  color: #F4D35E;
+  color: #004aad;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
-form input {
+input {
   width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border: 2px solid #1B263B;
-  border-radius: 5px;
-  font-size: 16px;
-}
-
-form button {
-  background-color: #1B263B;
-  color: #F4D35E;
-  border: none;
   padding: 12px;
-  width: 100%;
-  font-size: 16px;
-  cursor: pointer;
+  margin: 10px 0;
+  border: 2px solid #ddd;
   border-radius: 5px;
-  margin-top: 10px;
+  font-size: 16px;
 }
 
-form button:hover {
-  background-color: #0D1B2A;
+button {
+  width: 100%;
+  padding: 12px;
+  background-color: #ffc400;
+  border: none;
+  border-radius: 5px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+  cursor: pointer;
+  transition: background 0.3s ease;
 }
 
-#responseMessage {
+button:hover {
+  background-color: #e6ac00;
+}
+
+#message {
+  text-align: center;
   margin-top: 15px;
   font-weight: bold;
 }
