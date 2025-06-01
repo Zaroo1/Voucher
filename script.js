@@ -9,7 +9,7 @@ form.addEventListener("submit", function (e) {
   const quantity = document.getElementById("quantity").value;
   const seller = document.getElementById("seller").value;
 
-  fetch("https://script.google.com/macros/s/AKfycbxVPvILWeJDurfWZaibyAP6mOoBpOlZWnRifoqZyMbMcgnoh9KSE1S5joal0qaI0UI/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbwZXO3fUwcyShvn-Ay8Iq73qHAUZJxgQiNuSGoLxhHnOnE8zWy0eWSkMkcNGisuYo0q-g/exec", {
     method: "POST",
     body: JSON.stringify({
       item: item,
