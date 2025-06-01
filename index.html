@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>TwinAzz Sales Recorder</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TwinAzz Daily Sales</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <img src="logo.jpg" alt="TwinAzz Logo" class="logo">
-    <h1>Daily Sales Recorder</h1>
+    <h1>TwinAzz Daily Sales Form</h1>
     <form id="salesForm">
-      <input type="text" id="item" placeholder="Item Name" required>
-      <input type="number" id="price" placeholder="Price (GHS)" required>
-      <input type="number" id="quantity" placeholder="Quantity" required>
-      <input type="text" id="seller" placeholder="Your Name" required>
-      <button type="submit">Submit Sale</button>
+      <input type="text" id="item" placeholder="Item name" required />
+      <input type="number" id="price" placeholder="Price (GHS)" required />
+      <input type="number" id="quantity" placeholder="Quantity" required />
+      <input type="text" id="seller" placeholder="Seller name" required />
+      <button type="submit">Record Sale</button>
     </form>
-    <p id="responseMessage"></p>
+    <p id="message"></p>
   </div>
   <script src="script.js"></script>
 </body>
