@@ -8,7 +8,7 @@ document.getElementById("salesForm").addEventListener("submit", function(e) {
 
   const data = { item, price, quantity, seller };
 
-  fetch("https://docs.google.com/spreadsheets/d/1-4lp-mYGqlS4fQCgTuMyTqpLpjGJFr8H76IdlOynrWs/edit?usp=drivesdk", {
+  fetch("https://script.google.com/macros/s/AKfycbzzH-IBRGPFXlpiw6w44cOPdYH08OGNFcr1yttx-ohivjCQ9GKdvu0G5LMAusn_KY0c/exec", {
     method: "POST",
     body: JSON.stringify(data),
     headers: { "Content-Type": "application/json" }
