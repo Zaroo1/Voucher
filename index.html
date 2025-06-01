@@ -377,6 +377,30 @@
             }
         }
     });
+    
+// In your Google Apps Script, add this function:
+function getDailySales() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = sheet.getDataRange().getValues();
+  
+  // Filter today's sales
+  var today = new Date().toDateString();
+  var todaysSales = data.filter(row => {
+    return new Date(row[0]).toDateString() === today;
+  });
+  
+  return {
+    count: todaysSales.length,
+    total: todaysSales.reduce((sum, row) => sum + (row[3] * row[4]), 0)
+  };
+}
+    
+    
+    
+    
+    
+    
+    
 </script>
 </body>
 </html>
