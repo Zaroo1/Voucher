@@ -213,7 +213,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="price">Price (GH₵)</label>
+                        <label for="price">Price (₦)</label>
                         <input type="number" id="price" name="price" min="0" step="0.01" required>
                     </div>
                     
@@ -257,13 +257,13 @@
                 <p>Your sales will appear here after submission.</p>
             </div>
             <div class="total-sales" id="totalSales">
-                Total Sales Today: GH₵0.00
+                Total Sales Today: ₦0.00
             </div>
         </div>
     </div>
     
     <script>
-        // Replace this with your Google Apps Script URL
+        // Your Google Apps Script URL
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbpUwWe2Edke6BY0p5EW68X5hbmTMVMFZcOc5PWwslGtBq8jC8kCs4yHfnKDtRr1bm/exec';
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -271,79 +271,107 @@
             const successMessage = document.getElementById('successMessage');
             const errorMessage = document.getElementById('errorMessage');
             
-            // Load today's sales when page loads
-            loadTodaySales();
+            // Test the connection when page loads
+            testConnection();
             
-            salesForm.addEventListener('submit', function(e) {
+            salesForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                errorMessage.style.display = 'none';
                 
                 // Get form data
                 const formData = {
-                    salesperson: document.getElementById('salesperson').value,
-                    item: document.getElementById('item').value,
+                    salesperson: document.getElementById('salesperson').value.trim(),
+                    item: document.getElementById('item').value.trim(),
                     quantity: document.getElementById('quantity').value,
                     price: document.getElementById('price').value,
-                    customer: document.getElementById('customer').value,
+                    customer: document.getElementById('customer').value.trim(),
                     payment: document.getElementById('payment').value,
-                    notes: document.getElementById('notes').value
+                    notes: document.getElementById('notes').value.trim()
                 };
                 
-                // Submit to Google Sheets
-                fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Show success message
-                    successMessage.style.display = 'block';
-                    errorMessage.style.display = 'none';
+                // Validate form data
+                if (!formData.salesperson || !formData.item || !formData.quantity || 
+                    !formData.price || !formData.customer || !formData.payment) {
+                    showError("Please fill in all required fields");
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    const submitBtn = salesForm.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = "Processing...";
                     
-                    // Clear form (except salesperson name)
-                    document.getElementById('item').value = '';
-                    document.getElementById('quantity').value = '1';
-                    document.getElementById('price').value = '';
-                    document.getElementById('customer').value = '';
-                    document.getElementById('payment').value = 'Cash';
-                    document.getElementById('notes').value = '';
+                    // Submit to Google Sheets
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
                     
-                    // Focus on item field for next entry
-                    document.getElementById('item').focus();
+                    const data = await response.json();
                     
-                    // Refresh sales summary
-                    loadTodaySales();
-                    
-                    // Hide success message after 5 seconds
-                    setTimeout(() => {
-                        successMessage.style.display = 'none';
-                    }, 5000);
-                })
-                .catch((error) => {
+                    if (data.result === "success") {
+                        // Show success message
+                        successMessage.style.display = 'block';
+                        errorMessage.style.display = 'none';
+                        
+                        // Clear form (except salesperson name)
+                        document.getElementById('item').value = '';
+                        document.getElementById('quantity').value = '1';
+                        document.getElementById('price').value = '';
+                        document.getElementById('customer').value = '';
+                        document.getElementById('payment').value = 'Cash';
+                        document.getElementById('notes').value = '';
+                        
+                        // Focus on item field for next entry
+                        document.getElementById('item').focus();
+                        
+                        // Hide success message after 5 seconds
+                        setTimeout(() => {
+                            successMessage.style.display = 'none';
+                        }, 5000);
+                    } else {
+                        showError(data.message || "Failed to record sale");
+                    }
+                } catch (error) {
+                    showError("Network error. Please check your connection.");
                     console.error('Error:', error);
-                    errorMessage.style.display = 'block';
-                    successMessage.style.display = 'none';
-                });
+                } finally {
+                    // Reset button state
+                    const submitBtn = salesForm.querySelector('button[type="submit"]');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Record Sale";
+                }
             });
-        });
-        
-        function loadTodaySales() {
-            // In a real app, you would fetch this from your Google Sheet
-            // For now, we'll just show a message
-            document.getElementById('salesSummary').innerHTML = `
-                <p>Sales data will be displayed here when connected to Google Sheets.</p>
-            `;
             
-            // This is where you would add code to fetch and display actual sales data
-            // You would need another Google Apps Script function to retrieve data
-        }
-        
-        // Helper function to format currency
-        function formatCurrency(amount) {
-            return 'GH₵' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
-        }
+            function showError(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+            }
+            
+            async function testConnection() {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({test: true})
+                    });
+                    
+                    const data = await response.json();
+                    if (data.result === "error") {
+                        showError("Connection to Google Sheets failed. Please check the script URL.");
+                    }
+                } catch (error) {
+                    showError("Cannot connect to Google Sheets. Please check your internet connection and script URL.");
+                }
+            }
+        });
     </script>
 </body>
 </html>
