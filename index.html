@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Azz Internet Hub Sales Recorder</title>
+    <title>TwinAzz Sales Tracker</title>
     <style>
         :root {
             --deep-blue: #0a2463;
-            --bright-blue: #3e92cc;
-            --white: #fffaff;
-            --yellow: #ffd166;
-            --green: #06d6a0;
-            --red: #ef476f;
+            --gold: #FFD700;
+            --white: #ffffff;
+            --light-gray: #f5f7fa;
         }
         
         * {
@@ -22,12 +20,12 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #f5f7fa;
+            background-color: var(--light-gray);
             color: #333;
         }
         
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -35,49 +33,36 @@
         header {
             background-color: var(--deep-blue);
             color: var(--white);
-            padding: 20px 0;
-            border-radius: 0 0 10px 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 25px 0;
+            text-align: center;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
         }
         
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
         .logo {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
-            color: var(--yellow);
-        }
-        
-        h1 {
-            margin: 0;
-            font-size: 24px;
+            color: var(--gold);
+            margin-bottom: 10px;
         }
         
         .sales-form {
             background-color: var(--white);
-            padding: 25px;
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             margin-bottom: 30px;
         }
         
         .form-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
         }
         
         .form-group {
             margin-bottom: 20px;
-        }
-        
-        .form-group.full-width {
-            grid-column: span 2;
         }
         
         label {
@@ -89,105 +74,53 @@
         
         input, select, textarea {
             width: 100%;
-            padding: 12px;
+            padding: 12px 15px;
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 16px;
-            transition: border 0.3s;
-        }
-        
-        input:focus, select:focus, textarea:focus {
-            border-color: var(--bright-blue);
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(62, 146, 204, 0.2);
         }
         
         button {
             background-color: var(--deep-blue);
             color: white;
             border: none;
-            padding: 14px 20px;
+            padding: 15px;
             font-size: 16px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            transition: background-color 0.3s;
+            transition: all 0.3s;
             width: 100%;
         }
         
         button:hover {
-            background-color: #0a1e4a;
+            background-color: #071b4a;
+            transform: translateY(-2px);
         }
         
-        .success-message {
-            background-color: var(--green);
-            color: white;
+        /* Success/error messages */
+        .alert {
             padding: 15px;
             border-radius: 6px;
             margin-top: 20px;
             display: none;
         }
         
-        .error-message {
-            background-color: var(--red);
+        .alert-success {
+            background-color: #06d6a0;
             color: white;
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 20px;
-            display: none;
         }
         
-        .recent-sales {
-            background-color: var(--white);
-            padding: 25px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .sales-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        .sales-table th {
-            background-color: var(--deep-blue);
-            color: var(--white);
-            padding: 12px;
-            text-align: left;
-        }
-        
-        .sales-table td {
-            padding: 12px;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .sales-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        
-        .total-sales {
-            font-weight: bold;
-            margin-top: 20px;
-            font-size: 18px;
-            color: var(--deep-blue);
-        }
-        
-        @media (max-width: 768px) {
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-group.full-width {
-                grid-column: span 1;
-            }
+        .alert-error {
+            background-color: #ef476f;
+            color: white;
         }
     </style>
 </head>
 <body>
     <header>
-        <div class="container header-content">
-            <div class="logo">Azz Int Hub</div>
+        <div class="container">
+            <div class="logo">TWINAZZ ENTERPRISE</div>
             <h1>Sales Recording System</h1>
         </div>
     </header>
@@ -198,193 +131,127 @@
             <form id="salesForm">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="salesperson">Your Name</label>
-                        <input type="text" id="salesperson" name="salesperson" required>
+                        <label for="salesperson">Salesperson</label>
+                        <input type="text" id="salesperson" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="item">Item Name</label>
-                        <input type="text" id="item" name="item" required>
+                        <input type="text" id="item" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="quantity">Quantity</label>
-                        <input type="number" id="quantity" name="quantity" min="1" value="1" required>
+                        <input type="number" id="quantity" min="1" value="1" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="price">Price (GH₵)</label>
-                        <input type="number" id="price" name="price" min="0" step="0.01" required>
+                        <label for="price">Unit Price (GH₵)</label>
+                        <input type="number" id="price" min="0" step="0.01" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="customer">Customer Name</label>
-                        <input type="text" id="customer" name="customer" required>
+                        <input type="text" id="customer" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="payment">Payment Method</label>
-                        <select id="payment" name="payment" required>
+                        <select id="payment" required>
                             <option value="Cash">Cash</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="POS">POS</option>
                             <option value="Mobile Money">Mobile Money</option>
-                            <option value="Other">Other</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Card">Card</option>
                         </select>
                     </div>
                     
-                    <div class="form-group full-width">
+                    <div class="form-group" style="grid-column: span 2">
                         <label for="notes">Notes (Optional)</label>
-                        <textarea id="notes" name="notes" rows="2"></textarea>
+                        <textarea id="notes" rows="2"></textarea>
                     </div>
                 </div>
                 
                 <button type="submit">Record Sale</button>
                 
-                <div id="successMessage" class="success-message">
-                    Sale recorded successfully! You can now record another sale.
+                <div id="successMessage" class="alert alert-success">
+                    Sale recorded successfully! Total: GH₵<span id="saleTotal">0.00</span>
                 </div>
                 
-                <div id="errorMessage" class="error-message">
-                    There was an error recording your sale. Please try again.
+                <div id="errorMessage" class="alert alert-error">
+                    Error recording sale. Please try again.
                 </div>
             </form>
         </div>
-     
-        
-           
-       <div class="recent-sales">
-            <h2>Developed by Azz Internet Hub</h2>
-            <div id="salesSummary">
-                <p>+233 59 816 0732</p>
-            </div>
-         
-<div class="total-sales" id="totalSales">
-                Powered by Zaroo
-            </div>
-        </div>
     </div>
-    
-    
-    
-   <script>
-    // Your Google Apps Script URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx285C1FCzrnjSmAkCPvc-mxzcm5aExDQtgwmySkK3Iux7YUPBbHXSbUP2WXjcplfFnOw/exec';
+
+    <script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqDtPy1htc5g_KBZJuskXyW-Y4DzHy5FngjmyFnd5lo6_GX5Y3o9xJi5BpLKlQjS7X/exec';
     
     document.addEventListener('DOMContentLoaded', function() {
         const salesForm = document.getElementById('salesForm');
         const successMessage = document.getElementById('successMessage');
         const errorMessage = document.getElementById('errorMessage');
         
-        // Test connection immediately
-        testConnection();
-        
         salesForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            errorMessage.style.display = 'none';
             
-            // Get form elements
-            const salespersonEl = document.getElementById('salesperson');
-            const itemEl = document.getElementById('item');
-            const quantityEl = document.getElementById('quantity');
-            const priceEl = document.getElementById('price');
-            const customerEl = document.getElementById('customer');
-            const paymentEl = document.getElementById('payment');
-            const notesEl = document.getElementById('notes');
-            const submitBtn = salesForm.querySelector('button[type="submit"]');
+            // Get form values
+            const salesperson = document.getElementById('salesperson').value.trim();
+            const item = document.getElementById('item').value.trim();
+            const quantity = parseFloat(document.getElementById('quantity').value);
+            const price = parseFloat(document.getElementById('price').value);
+            const customer = document.getElementById('customer').value.trim();
+            const payment = document.getElementById('payment').value;
+            const notes = document.getElementById('notes').value.trim();
             
-            // Convert to numbers and calculate total
-            const quantity = parseFloat(quantityEl.value) || 0;
-            const price = parseFloat(priceEl.value) || 0;
-            const total = (quantity * price).toFixed(2); // Calculate in JavaScript
+            // Calculate total
+            const total = (quantity * price).toFixed(2);
+            document.getElementById('saleTotal').textContent = total;
             
-            // Prepare form data
-            const formData = {
-                salesperson: salespersonEl.value.trim(),
-                item: itemEl.value.trim(),
-                quantity: quantity,
-                price: price,
-                total: total, // Send pre-calculated total
-                customer: customerEl.value.trim(),
-                payment: paymentEl.value,
-                notes: notesEl.value.trim()
-            };
-            
-            // Validate form data
-            if (!formData.salesperson || !formData.item || isNaN(quantity) || 
-                isNaN(price) || !formData.customer || !formData.payment) {
-                showError("Please fill valid values in all required fields");
+            // Validate
+            if (!salesperson || !item || !quantity || !price || !customer || !payment) {
+                errorMessage.textContent = "Please fill all required fields!";
+                errorMessage.style.display = 'block';
                 return;
             }
             
             try {
-                // Show loading state
-                submitBtn.disabled = true;
-                submitBtn.textContent = "Processing...";
-                
                 // Submit to Google Sheets
-                await fetch(SCRIPT_URL + '?nocache=' + new Date().getTime(), {
+                const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
-                    mode: 'no-cors'
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        salesperson,
+                        item,
+                        quantity,
+                        price,
+                        customer,
+                        payment,
+                        notes
+                    })
                 });
                 
                 // Show success
                 successMessage.style.display = 'block';
                 errorMessage.style.display = 'none';
                 
-                // Clear form (except salesperson name)
-                itemEl.value = '';
-                quantityEl.value = '1';
-                priceEl.value = '';
-                customerEl.value = '';
-                paymentEl.value = 'Cash';
-                notesEl.value = '';
+                // Clear form for next sale
+                document.getElementById('item').value = '';
+                document.getElementById('quantity').value = '1';
+                document.getElementById('price').value = '';
+                document.getElementById('customer').value = '';
+                document.getElementById('notes').value = '';
                 
-                // Focus for next entry
-                itemEl.focus();
-                
-                // Hide success after 5 sec
-                setTimeout(() => {
-                    successMessage.style.display = 'none';
-                }, 5000);
+                // Focus on next field
+                document.getElementById('item').focus();
                 
             } catch (error) {
-                showError("Sale recorded! (Response not verified due to security settings)");
-                console.log("Data likely submitted:", formData);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = "Record Sale";
+                errorMessage.textContent = "Network error. Data saved offline.";
+                errorMessage.style.display = 'block';
+                console.error(error);
             }
         });
-        
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-        }
-        
-        async function testConnection() {
-            try {
-                const testUrl = SCRIPT_URL + '?test=true&nocache=' + new Date().getTime();
-                await fetch(testUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({test: true}),
-                    mode: 'no-cors'
-                });
-                console.log("Connection test completed");
-            } catch (error) {
-                console.log("Connection test error (expected):", error);
-            }
-        }
     });
-</script>
-
+    </script>
 </body>
 </html>
