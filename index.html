@@ -1,257 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TwinAzz Sales Tracker</title>
-    <style>
-        :root {
-            --deep-blue: #0a2463;
-            --gold: #FFD700;
-            --white: #ffffff;
-            --light-gray: #f5f7fa;
-        }
-        
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--light-gray);
-            color: #333;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            background-color: var(--deep-blue);
-            color: var(--white);
-            padding: 25px 0;
-            text-align: center;
-            border-radius: 0 0 15px 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-        }
-        
-        .logo {
-            font-size: 28px;
-            font-weight: bold;
-            color: var(--gold);
-            margin-bottom: 10px;
-        }
-        
-        .sales-form {
-            background-color: var(--white);
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            margin-bottom: 30px;
-        }
-        
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--deep-blue);
-        }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
-        }
-        
-        button {
-            background-color: var(--deep-blue);
-            color: white;
-            border: none;
-            padding: 15px;
-            font-size: 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            width: 100%;
-        }
-        
-        button:hover {
-            background-color: #071b4a;
-            transform: translateY(-2px);
-        }
-        
-        /* Success/error messages */
-        .alert {
-            padding: 15px;
-            border-radius: 6px;
-            margin-top: 20px;
-            display: none;
-        }
-        
-        .alert-success {
-            background-color: #06d6a0;
-            color: white;
-        }
-        
-        .alert-error {
-            background-color: #ef476f;
-            color: white;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>TwinAzz Sales Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-    <header>
-        <div class="container">
-            <div class="logo">TWINAZZ ENTERPRISE</div>
-            <h1>Sales Recording System</h1>
-        </div>
-    </header>
-    
-    <div class="container">
-        <div class="sales-form">
-            <h2>Record New Sale</h2>
-            <form id="salesForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="salesperson">Salesperson</label>
-                        <input type="text" id="salesperson" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="item">Item Name</label>
-                        <input type="text" id="item" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="quantity">Quantity</label>
-                        <input type="number" id="quantity" min="1" value="1" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="price">Unit Price (GH₵)</label>
-                        <input type="number" id="price" min="0" step="0.01" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="customer">Customer Name</label>
-                        <input type="text" id="customer" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="payment">Payment Method</label>
-                        <select id="payment" required>
-                            <option value="Cash">Cash</option>
-                            <option value="Mobile Money">Mobile Money</option>
-                            <option value="Bank Transfer">Bank Transfer</option>
-                            <option value="Card">Card</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" style="grid-column: span 2">
-                        <label for="notes">Notes (Optional)</label>
-                        <textarea id="notes" rows="2"></textarea>
-                    </div>
-                </div>
-                
-                <button type="submit">Record Sale</button>
-                
-                <div id="successMessage" class="alert alert-success">
-                    Sale recorded successfully! Total: GH₵<span id="saleTotal">0.00</span>
-                </div>
-                
-                <div id="errorMessage" class="alert alert-error">
-                    Error recording sale. Please try again.
-                </div>
-            </form>
-        </div>
-    </div>
+<body style="margin:0; font-family:'Segoe UI', sans-serif; background:#f0f4ff; color:#333;">
+  <div style="max-width:700px; margin:auto; padding:2rem; background:white; box-shadow:0 0 15px rgba(0,0,0,0.1); border-top:8px solid #003366;">
+    <h1 style="color:#003366; text-align:center;">TwinAzz Daily Sales Tracker</h1>
 
-    <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqDtPy1htc5g_KBZJuskXyW-Y4DzHy5FngjmyFnd5lo6_GX5Y3o9xJi5BpLKlQjS7X/exec';
-    
-    document.addEventListener('DOMContentLoaded', function() {
-        const salesForm = document.getElementById('salesForm');
-        const successMessage = document.getElementById('successMessage');
-        const errorMessage = document.getElementById('errorMessage');
-        
-        salesForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            // Get form values
-            const salesperson = document.getElementById('salesperson').value.trim();
-            const item = document.getElementById('item').value.trim();
-            const quantity = parseFloat(document.getElementById('quantity').value);
-            const price = parseFloat(document.getElementById('price').value);
-            const customer = document.getElementById('customer').value.trim();
-            const payment = document.getElementById('payment').value;
-            const notes = document.getElementById('notes').value.trim();
-            
-            // Calculate total
-            const total = (quantity * price).toFixed(2);
-            document.getElementById('saleTotal').textContent = total;
-            
-            // Validate
-            if (!salesperson || !item || !quantity || !price || !customer || !payment) {
-                errorMessage.textContent = "Please fill all required fields!";
-                errorMessage.style.display = 'block';
-                return;
-            }
-            
-            try {
-                // Submit to Google Sheets
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        salesperson,
-                        item,
-                        quantity,
-                        price,
-                        customer,
-                        payment,
-                        notes
-                    })
-                });
-                
-                // Show success
-                successMessage.style.display = 'block';
-                errorMessage.style.display = 'none';
-                
-                // Clear form for next sale
-                document.getElementById('item').value = '';
-                document.getElementById('quantity').value = '1';
-                document.getElementById('price').value = '';
-                document.getElementById('customer').value = '';
-                document.getElementById('notes').value = '';
-                
-                // Focus on next field
-                document.getElementById('item').focus();
-                
-            } catch (error) {
-                errorMessage.textContent = "Network error. Data saved offline.";
-                errorMessage.style.display = 'block';
-                console.error(error);
-            }
-        });
+    <form id="sales-form" style="display:flex; flex-direction:column; gap:1rem; margin-top:1rem;">
+      <input type="text" id="item-name" placeholder="Item Name" required style="padding:10px; font-size:1rem; border:1px solid #ccc; border-radius:5px;">
+      <input type="number" id="item-quantity" placeholder="Quantity" required style="padding:10px; font-size:1rem; border:1px solid #ccc; border-radius:5px;">
+      <input type="number" id="item-price" placeholder="Unit Price (GHS)" required style="padding:10px; font-size:1rem; border:1px solid #ccc; border-radius:5px;">
+      <button type="submit" style="padding:10px; font-size:1rem; font-weight:bold; background:#ffcc00; color:#003366; border:none; border-radius:5px; cursor:pointer;">Add Sale</button>
+    </form>
+
+    <h2 style="margin-top:2rem; color:#003366;">Sales Summary</h2>
+    <table id="sales-table" style="width:100%; margin-top:1rem; border-collapse:collapse;">
+      <thead style="background-color:#003366; color:white;">
+        <tr>
+          <th style="padding:8px; border:1px solid #ccc;">Item</th>
+          <th style="padding:8px; border:1px solid #ccc;">Qty</th>
+          <th style="padding:8px; border:1px solid #ccc;">Price</th>
+          <th style="padding:8px; border:1px solid #ccc;">Total</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <h3 id="total-sales" style="text-align:right; margin-top:1rem; color:#003366;">Total Sales: GHS 0.00</h3>
+  </div>
+
+  <script>
+    const form = document.getElementById("sales-form");
+    const tableBody = document.querySelector("#sales-table tbody");
+    const totalDisplay = document.getElementById("total-sales");
+
+    let totalSales = 0;
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById("item-name").value.trim();
+      const qty = parseInt(document.getElementById("item-quantity").value);
+      const price = parseFloat(document.getElementById("item-price").value);
+      const total = qty * price;
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td style="padding:8px; border:1px solid #ccc;">${name}</td>
+        <td style="padding:8px; border:1px solid #ccc;">${qty}</td>
+        <td style="padding:8px; border:1px solid #ccc;">GHS ${price.toFixed(2)}</td>
+        <td style="padding:8px; border:1px solid #ccc;">GHS ${total.toFixed(2)}</td>
+      `;
+      tableBody.appendChild(row);
+
+      totalSales += total;
+      totalDisplay.textContent = `Total Sales: GHS ${totalSales.toFixed(2)}`;
+
+      fetch("https://script.google.com/macros/s/AKfycbzcf1q_JVw6nxl6yuDHk6kkn08XtyNe40GOBgmCSCYmROZ9W42sL_CWnnrRYOyYuxhZ/exec", {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: name,
+          quantity: qty,
+          price: price,
+          total: total
+        })
+      });
+
+      form.reset();
     });
-    </script>
+  </script>
 </body>
 </html>
