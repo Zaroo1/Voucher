@@ -293,21 +293,27 @@
             const notesEl = document.getElementById('notes');
             const submitBtn = salesForm.querySelector('button[type="submit"]');
             
-            // Get form data
+            // Convert to numbers and calculate total
+            const quantity = parseFloat(quantityEl.value) || 0;
+            const price = parseFloat(priceEl.value) || 0;
+            const total = (quantity * price).toFixed(2); // Calculate in JavaScript
+            
+            // Prepare form data
             const formData = {
                 salesperson: salespersonEl.value.trim(),
                 item: itemEl.value.trim(),
-                quantity: quantityEl.value,
-                price: priceEl.value,
+                quantity: quantity,
+                price: price,
+                total: total, // Send pre-calculated total
                 customer: customerEl.value.trim(),
                 payment: paymentEl.value,
                 notes: notesEl.value.trim()
             };
             
             // Validate form data
-            if (!formData.salesperson || !formData.item || !formData.quantity || 
-                !formData.price || !formData.customer || !formData.payment) {
-                showError("Please fill in all required fields");
+            if (!formData.salesperson || !formData.item || isNaN(quantity) || 
+                isNaN(price) || !formData.customer || !formData.payment) {
+                showError("Please fill valid values in all required fields");
                 return;
             }
             
@@ -317,7 +323,7 @@
                 submitBtn.textContent = "Processing...";
                 
                 // Submit to Google Sheets
-                const response = await fetch(SCRIPT_URL + '?nocache=' + new Date().getTime(), {
+                await fetch(SCRIPT_URL + '?nocache=' + new Date().getTime(), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -326,8 +332,7 @@
                     mode: 'no-cors'
                 });
                 
-                // For no-cors mode, we can't read the response, so we'll assume success
-                // Show success message
+                // Show success
                 successMessage.style.display = 'block';
                 errorMessage.style.display = 'none';
                 
@@ -339,19 +344,18 @@
                 paymentEl.value = 'Cash';
                 notesEl.value = '';
                 
-                // Focus on item field for next entry
+                // Focus for next entry
                 itemEl.focus();
                 
-                // Hide success message after 5 seconds
+                // Hide success after 5 sec
                 setTimeout(() => {
                     successMessage.style.display = 'none';
                 }, 5000);
                 
             } catch (error) {
                 showError("Sale recorded! (Response not verified due to security settings)");
-                console.log("Note: Due to CORS restrictions, we can't verify the response, but your data was likely submitted.");
+                console.log("Data likely submitted:", formData);
             } finally {
-                // Reset button state
                 submitBtn.disabled = false;
                 submitBtn.textContent = "Record Sale";
             }
@@ -366,7 +370,7 @@
         async function testConnection() {
             try {
                 const testUrl = SCRIPT_URL + '?test=true&nocache=' + new Date().getTime();
-                const response = await fetch(testUrl, {
+                await fetch(testUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -374,33 +378,12 @@
                     body: JSON.stringify({test: true}),
                     mode: 'no-cors'
                 });
-                
-                console.log("Connection test completed (response not readable due to CORS)");
+                console.log("Connection test completed");
             } catch (error) {
-                showError("Note: Connection test incomplete due to security restrictions, but submissions should still work.");
-                console.log("Connection test error (expected with no-cors):", error);
+                console.log("Connection test error (expected):", error);
             }
         }
     });
-    
-// In your Google Apps Script, add this function:
-function getDailySales() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = sheet.getDataRange().getValues();
-  
-  // Filter today's sales
-  var today = new Date().toDateString();
-  var todaysSales = data.filter(row => {
-    return new Date(row[0]).toDateString() === today;
-  });
-  
-  return {
-    count: todaysSales.length,
-    total: todaysSales.reduce((sum, row) => sum + (row[3] * row[4]), 0)
-  };
-}
-      
-    
 </script>
 
 </body>
